@@ -9,3 +9,4 @@ class ETask(Enum):
     CHECK_AUTH_NOCCELA = 6
     STATUS_ELEVATOR = 7
     STATUS_CRANE = 8
+    CALL_ELEVATOR = 9
