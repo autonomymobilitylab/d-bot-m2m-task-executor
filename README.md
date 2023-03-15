@@ -6,3 +6,6 @@ TODO functionalities:
 Executing tasks
 automatic task priority management
 adding new tasks via services
+
+## 
+roslauch d-bot-m2m-task-executor task_manager.py
