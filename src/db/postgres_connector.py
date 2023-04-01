@@ -1,0 +1,53 @@
+import psycopg2
+
+class PostgresConnector:
+    def __init__(self, dbname, user, password, host='localhost', port=5432):
+        self.dbname = dbname
+        self.user = user
+        self.password = password
+        self.host = host
+        self.port = port
+        self.conn = None
+        self.cursor = None
+    
+    def connect(self):
+        try:
+            self.conn = psycopg2.connect(
+                dbname=self.dbname,
+                user=self.user,
+                password=self.password,
+                host=self.host,
+                port=self.port
+            )
+            self.cursor = self.conn.cursor()
+            print(f"Connected to database {self.dbname} successfully!")
+        except Exception as e:
+            print(f"Unable to connect to database: {e}")
+    
+    def execute(self, query):
+        try:
+            self.cursor.execute(query)
+            self.conn.commit()
+            print("Query executed successfully!")
+        except Exception as e:
+            print(f"Unable to execute query: {e}")
+
+    def fetch(self, query):
+        try:
+            self.connect()
+            self.cursor.execute(query)
+            # self.conn.commit()
+            print("Query executed successfully!")
+            res = self.cursor.fetchall()
+            self.disconnect()
+            return res
+        except Exception as e:
+            print(f"Unable to execute query: {e}")
+    
+    def disconnect(self):
+        try:
+            self.cursor.close()
+            self.conn.close()
+            print(f"Disconnected from database {self.dbname} successfully!")
+        except Exception as e:
+            print(f"Unable to disconnect from database: {e}")
