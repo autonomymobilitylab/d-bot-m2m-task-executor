@@ -2,22 +2,34 @@
 import rospy
 from std_msgs.msg import String
 
-from src.util.priority_queue import TaskPriorityQueue
-from src.util.priority_manager import TaskPriorityManager
+from util.priority_queue import TaskPriorityQueue
+from util.priority_manager import TaskPriorityManager
 
-task_priority_queue = TaskPriorityQueue()
-task_priority_manager = TaskPriorityManager()
+class TaskManager:
+    def __init__(self, ros=False, ros_rate = 1):
+        self.task_priority_queue = TaskPriorityQueue()
+        self.task_priority_manager = TaskPriorityManager()
+        self.ros = ros
+        if (self.ros):
+            self.startRosnode()
+            self.rate = rospy.Rate(ros_rate)
+            self.hello_pub = self.startHelloworldPublisher()
+        
+    def startLoggingService(self):
+        print('implement this')
+
+    def startRosnode(self):
+        rospy.init_node('task_manager')
+
+    def startHelloworldPublisher(self):
+        return rospy.Publisher('task_manager', String, queue_size=10)
 
 if __name__ == '__main__':
-    rospy.init_node('task_manager')
+    taskmanager = TaskManager(True)
 
-    # Create a publisher to publish messages to the 'task_manager' topic
-    pub = rospy.Publisher('task_manager', String, queue_size=10)
-
-    # Publish a message to the 'task_manager' topic every 1 second
-    rate = rospy.Rate(1) # 1 Hz
-    while not rospy.is_shutdown():
-        message = 'Hello, world!'
-        rospy.loginfo(message)
-        pub.publish(message)
-        rate.sleep()
+    if (taskmanager.ros):
+        while not rospy.is_shutdown():
+            message = 'Hello, world!'
+            rospy.loginfo(message)
+            taskmanager.hello_pub.publish(message)
+            taskmanager.rate.sleep()
