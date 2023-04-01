@@ -2,6 +2,7 @@
 import rospy
 from std_msgs.msg import String
 
+from ..srv import AddTask, AddTaskResponse
 from util.priority_queue import TaskPriorityQueue
 from util.priority_manager import TaskPriorityManager
 
@@ -14,6 +15,7 @@ class TaskManager:
             self.startRosnode()
             self.rate = rospy.Rate(ros_rate)
             self.hello_pub = self.startHelloworldPublisher()
+            self.addTasksrv = self.startAddTaskService()
         
     def startLoggingService(self):
         print('implement this')
@@ -23,6 +25,14 @@ class TaskManager:
 
     def startHelloworldPublisher(self):
         return rospy.Publisher('task_manager', String, queue_size=10)
+
+    def startAddTaskService(self):
+        return rospy.Service('add_task', AddTask, self.addTask)
+
+    def addTask(self, req):
+        print('adding new task') # TODO replace with database logger
+        response = AddTaskResponse(req)
+        return response
 
 if __name__ == '__main__':
     taskmanager = TaskManager(True)
