@@ -14,6 +14,7 @@ catkin_python_setup()
 add_service_files(
    FILES
    AddTask.srv
+   TaskCall.srv
 )
 
 generate_messages(
