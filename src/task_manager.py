@@ -2,7 +2,8 @@
 import rospy
 from std_msgs.msg import String
 
-from ..srv import AddTask, AddTaskResponse
+# from ..srv import AddTask, AddTaskResponse
+from d_bot_m2m_task_executor.srv import AddTask, AddTaskResponse
 from util.priority_queue import TaskPriorityQueue
 from util.priority_manager import TaskPriorityManager
 

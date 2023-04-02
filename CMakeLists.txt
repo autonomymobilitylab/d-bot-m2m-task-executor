@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.0.2)
-project(d-bot-m2m-task-executor)
+project(d_bot_m2m_task_executor)
 
 find_package(catkin REQUIRED COMPONENTS
   roscpp
@@ -14,7 +14,18 @@ add_service_files(
    AddTask.srv
 )
 
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+)
+
 catkin_package(
+  CATKIN_DEPENDS message_runtime std_msgs
+)
+
+catkin_install_python(PROGRAMS
+    src/task_manager.py
+    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 
 include_directories(
