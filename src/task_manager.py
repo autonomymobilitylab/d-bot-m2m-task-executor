@@ -39,7 +39,7 @@ class TaskManager:
     def do_next_task(self):
         task = self.task_priority_queue.get_task()
         print('Doing task') # TODO replace with database logger
-        print(task) # TODO replace with database logger
+        print(task.stringify_task()) # TODO replace with database logger
 
         if (task == ETask.STATUS_ELEVATOR):
             # TODO
