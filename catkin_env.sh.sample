@@ -1,0 +1,4 @@
+export DATABASE_NAME=template_Value
+export DATABASE_USER=template_Value
+export DATABASE_PASSWORD=template_Value
+export TASK_ROS_RATE=1
