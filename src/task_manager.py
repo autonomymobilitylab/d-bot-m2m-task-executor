@@ -20,7 +20,7 @@ class TaskManager:
         self.ros = ros
         if (self.ros):
             self.startRosnode()
-            self.rate = rospy.Rate(config['ROS_RATE'])
+            self.rate = rospy.Rate(int(config['TASK_ROS_RATE']))
             self.hello_pub = self.startHelloworldPublisher()
             self.addTasksrv = self.startAddTaskService()
         self.logger = Logger(PostgresConnector(config['DATABASE_NAME'], config['DATABASE_USER'], config['DATABASE_PASSWORD']))
@@ -55,8 +55,12 @@ class TaskManager:
 
     def do_next_task(self):
         task = self.task_priority_queue.get_task()
-        print('Doing task') # TODO replace with database logger
-        print(task.stringify_task()) # TODO replace with database logger
+        # print('Doing task') # TODO replace with database logger
+        try:
+            rospy.loginfo(task.stringify_task())
+        #print(task.stringify_task()) # TODO replace with database logger
+        except:
+            rospy.loginfo('No task')
 
         if (task == ETask.STATUS_ELEVATOR):
             # TODO
@@ -114,7 +118,7 @@ if __name__ == '__main__':
     config = dotenv_values("resources/.env")
     if bool(config) == False:
         config = ConfigLoader()
-        config.load(['DATABASE_NAME'], ['DATABASE_USER'], ['DATABASE_PASSWORD'], ['ROS_RATE'])
+        config.load(['DATABASE_NAME', 'DATABASE_USER', 'DATABASE_PASSWORD', 'TASK_ROS_RATE'])
     taskmanager = TaskManager(config, True)
     taskmanager.startLoggingService()
     # s = rospy.Service('add_task', task_manager, add_task_to_queue)
