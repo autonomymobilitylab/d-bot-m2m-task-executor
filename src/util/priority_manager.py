@@ -1,5 +1,5 @@
-from src.enum.etask import ETask
-from src.enum.etask_priority import ETaskPriority
+from definitions.etask import ETask
+from definitions.etask_priority import ETaskPriority
 
 class TaskPriorityManager:
     

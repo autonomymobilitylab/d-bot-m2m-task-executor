@@ -1,0 +1,5 @@
+<launch>
+  <node name="task_manager" pkg="d_bot_m2m_task_executor" type="task_manager.py">
+    <param name="publish_rate" value="1.0" />
+  </node>
+</launch>
