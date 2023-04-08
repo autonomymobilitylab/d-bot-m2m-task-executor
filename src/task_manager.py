@@ -1,26 +1,42 @@
 #!/usr/bin/env python3
 import rospy
 from std_msgs.msg import String
+from dotenv import dotenv_values
 
 from d_bot_m2m_task_executor.srv import AddTask, AddTaskResponse
 from d_bot_m2m_task_executor.srv import TaskCall, TaskCallResponse
 from util.priority_queue import TaskPriorityQueue
 from util.priority_manager import TaskPriorityManager
 from definitions.etask import ETask
+from db.logger import Logger
+from db.postgres_connector import PostgresConnector
+from resources.config_loader import ConfigLoader
 
 class TaskManager:
-    def __init__(self, ros=False, ros_rate = 1):
+    def __init__(self, config, ros=False):
         self.task_priority_queue = TaskPriorityQueue()
         self.task_priority_manager = TaskPriorityManager()
         self.ros = ros
         if (self.ros):
             self.startRosnode()
-            self.rate = rospy.Rate(ros_rate)
+            self.rate = rospy.Rate(config['ROS_RATE'])
             self.hello_pub = self.startHelloworldPublisher()
             self.addTasksrv = self.startAddTaskService()
+        self.logger = Logger(PostgresConnector(config['DATABASE_NAME'], config['DATABASE_USER'], config['DATABASE_PASSWORD']))
+        # update regulary via get_curr_location
+        self.location = { "x": 0, "y": 0, "z": 0}
         
     def startLoggingService(self):
         print('implement this')
+
+    def start_location_logging_subscriber(self):
+        # TODO
+        print('implement this')
+        return None
+    
+    def get_curr_location(self):
+        # TODO subscribe to location and save to self.location
+        return None
 
     def startRosnode(self):
         rospy.init_node('task_manager')
@@ -61,8 +77,15 @@ class TaskManager:
         request = task.task_type
         return service_proxy(request)
 
+    def log_location(self):
+        self.logger.log_location(self.location)
+
 if __name__ == '__main__':
-    taskmanager = TaskManager(True)
+    config = dotenv_values("resources/.env")
+    if bool(config) == False:
+        config = ConfigLoader()
+        config.load(['DATABASE_NAME'], ['DATABASE_USER'], ['DATABASE_PASSWORD'], ['ROS_RATE'])
+    taskmanager = TaskManager(config, True)
     taskmanager.startLoggingService()
 
     if (taskmanager.ros):
@@ -71,4 +94,5 @@ if __name__ == '__main__':
             rospy.loginfo(message)
             taskmanager.hello_pub.publish(message)
             taskmanager.do_next_task()
+            taskmanager.log_location()
             taskmanager.rate.sleep()
