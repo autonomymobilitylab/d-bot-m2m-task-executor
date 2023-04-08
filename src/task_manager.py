@@ -3,6 +3,7 @@ import rospy
 from std_msgs.msg import String
 from dotenv import dotenv_values
 
+from api.task import Task
 from d_bot_m2m_task_executor.srv import AddTask, AddTaskResponse
 from d_bot_m2m_task_executor.srv import TaskCall, TaskCallResponse
 from util.priority_queue import TaskPriorityQueue
@@ -80,6 +81,35 @@ class TaskManager:
     def log_location(self):
         self.logger.log_location(self.location)
 
+    def add_task_to_queue(self, task_id):
+        task = Task(task_id,self.task_priority_manager.get_priority(task_id))
+        self. task_priority_queue.add_task(task)
+
+    def start_task_execution(self, task):
+        task = self. task_priority_queue.get_task()
+        self. execute_task(task)
+        
+    def execute_task(self, task):
+        if (task.task_type == ETask.STOP):
+            # TODO
+            print("implement this")
+        if (task.task_type == ETask.WAIT):
+            # TODO
+            print("implement this")
+        if (task.task_type == ETask.STATUS_ELEVATOR):
+            # TODO
+            print("implement this")
+        if (task.task_type == ETask.STATUS_CRANE):
+            # TODO
+            print("implement this")
+        if (task.task_type == ETask.NAVIGATE):
+            # TODO
+            print("implement this")
+        if (task.task_type == ETask.CALL_ELEVATOR):
+            # TODO
+            print("implement this")
+        return True
+
 if __name__ == '__main__':
     config = dotenv_values("resources/.env")
     if bool(config) == False:
@@ -87,6 +117,7 @@ if __name__ == '__main__':
         config.load(['DATABASE_NAME'], ['DATABASE_USER'], ['DATABASE_PASSWORD'], ['ROS_RATE'])
     taskmanager = TaskManager(config, True)
     taskmanager.startLoggingService()
+    # s = rospy.Service('add_task', task_manager, add_task_to_queue)
 
     if (taskmanager.ros):
         while not rospy.is_shutdown():
