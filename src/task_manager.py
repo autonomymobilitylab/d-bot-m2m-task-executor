@@ -6,7 +6,7 @@ import json
 
 from api.task import Task
 from d_bot_m2m_task_executor.srv import AddTask, AddTaskResponse
-from d_bot_m2m_task_executor.srv import TaskCall, TaskCallResponse
+from d_bot_m2m_task_executor.srv import TaskCall, TaskCallResponse, TaskCallRequest
 from util.priority_queue import TaskPriorityQueue
 from util.priority_manager import TaskPriorityManager
 from definitions.etask import ETask
@@ -67,10 +67,11 @@ class TaskManager:
         return service_proxy(request)
 
     def get_crane_position(self, task:Task):
-        request = task.jsonify()
-        rospy.loginfo(request)
+        task_json = task.jsonify()
         rospy.wait_for_service('/crane_communication/position')
         service_proxy = rospy.ServiceProxy('/crane_communication/position', TaskCall)
+        request = TaskCallRequest()
+        request.task = task_json
         return service_proxy(request)
 
     def log_location(self):
