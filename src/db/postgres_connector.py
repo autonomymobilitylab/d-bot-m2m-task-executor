@@ -29,8 +29,10 @@ class PostgresConnector:
             self.cursor.execute(query)
             self.conn.commit()
             print("Query executed successfully!")
+            return True
         except Exception as e:
             print(f"Unable to execute query: {e}")
+            return False
 
     def fetch(self, query):
         try:

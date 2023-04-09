@@ -107,7 +107,9 @@ class TaskManager:
         return service_proxy(request)
 
     def log_location(self):
-        self.logger.log_location(self.location)
+        log_res = self.logger.log_location(self.location)
+        if (log_res == False):
+            rospy.loginfo("Logging of location failed")
 
     def add_task_to_queue(self, task: Task):
         self.task_priority_queue.add_task(task.priority, task)
@@ -119,8 +121,11 @@ class TaskManager:
     def execute_task(self, task:Task):
         # TODO make most task executions asyncronous
         # TODO reduce complexity, make neater
+        log_res = None
         if (task):
-            self.logger.logAction(task)
+            log_res = self.logger.logAction(task)
+            if (log_res == False):
+                rospy.loginfo("Logging of action failed")
             rospy.loginfo(task.jsonify())
         else:
             return
