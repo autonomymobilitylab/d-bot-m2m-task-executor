@@ -89,6 +89,14 @@ class TaskManager:
         request = TaskCallRequest()
         request.task = task_json
         return service_proxy(request)
+    
+    def get_area_protection_client(self, task:Task):
+        task_json = task.jsonify()
+        rospy.wait_for_service('/beacon_communication/protection')
+        service_proxy = rospy.ServiceProxy('/beacon_communication/protection', TaskCall)
+        request = TaskCallRequest()
+        request.task = task_json
+        return service_proxy(request)
 
     def log_location(self):
         self.logger.log_location(self.location)
@@ -102,17 +110,18 @@ class TaskManager:
 
     def execute_task(self, task):
         # TODO make most task executions asyncronous
+        # TODO reduce complexity, make neater
         self.logger.logAction(task)
         if (task.task_type == ETask.STOP):
             # TODO
             print("implement this")
-        if (task.task_type == ETask.WAIT):
+        elif (task.task_type == ETask.WAIT):
             # TODO
             print("implement this")
-        if (task.task_type == ETask.STATUS_ELEVATOR):
+        elif (task.task_type == ETask.STATUS_ELEVATOR):
             # TODO
             print("implement this")
-        if (task.task_type == ETask.STATUS_CRANE):
+        elif (task.task_type == ETask.STATUS_CRANE):
             res = self.get_crane_status_client(task)
             task_res = Task().load(res.task)
             if (task_res.error == None and task_res.success == True):
@@ -120,23 +129,31 @@ class TaskManager:
             else:
                 # TODO suspend current operation
                 rospy.loginfo("Crane is moving")
-        if (task.task_type == ETask.NAVIGATE):
+        elif (task.task_type == ETask.NAVIGATE):
             # TODO
             print("implement this")
-        if (task.task_type == ETask.CALL_ELEVATOR):
+        elif (task.task_type == ETask.CALL_ELEVATOR):
             # TODO
             print("implement this")
-        if (task.task_type == ETask.POSITION_CRANE):
+        elif (task.task_type == ETask.POSITION_CRANE):
             res = self.get_crane_position_client(task)
             task_res = Task().load(res.task)
             if task_res.success == False:
                 rospy.loginfo("Crane position check failed")
-        if (task.task_type == ETask.STOP_CRANE):
+        elif (task.task_type == ETask.STOP_CRANE):
             res = self.get_crane_stop_client(task)
             task_res = Task().load(res.task)
             if task_res.success == False:
                 rospy.loginfo("Crane stopping failed")
                 # TODO what to do after crane stop failed
+        elif (task.task_type == ETask.START_WORK_AREA_PROTECTION):
+            res = self.get_area_protection_client(task)
+            task_res = Task().load(res.task)
+            if task_res.success == False:
+                rospy.loginfo("Beacon workarea protection failed")
+                # TODO what to do after crane stop failed
+        else:
+            rospy.loginfo("Task Type not initialized")
         return True
 
 if __name__ == '__main__':
@@ -147,6 +164,10 @@ if __name__ == '__main__':
     taskmanager = TaskManager(config, True)
     taskmanager.startLoggingService()
 
+    task = Task(ETask.START_WORK_AREA_PROTECTION, taskmanager.task_priority_manager.get_priority(ETask.START_WORK_AREA_PROTECTION))
+    task.device_id = 106
+    taskmanager.add_task_to_queue(task)
+
     # for testing
     task = Task(ETask.STOP_CRANE, taskmanager.task_priority_manager.get_priority(ETask.STOP_CRANE))
     taskmanager.add_task_to_queue(task)
@@ -154,7 +175,7 @@ if __name__ == '__main__':
     if (taskmanager.ros):
         while not rospy.is_shutdown():
             # for testing
-            taskmanager.add_task_to_queue(task)
+            # taskmanager.add_task_to_queue(task)
             message = 'Hello, world!'
             # rospy.loginfo(message)
             taskmanager.hello_pub.publish(message)
