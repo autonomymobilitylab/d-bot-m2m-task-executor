@@ -47,17 +47,25 @@ class TaskManager:
         return rospy.Publisher('task_manager', String, queue_size=10)
 
     def startAddTaskService(self):
-        return rospy.Service('add_task', AddTask, self.add_task_req_handler)
+        return rospy.Service('/task_manager/add_task', TaskCall, self.add_task_req_handler)
 
     def add_task_req_handler(self, req):
-        print('adding new task') # TODO replace with database logger
-        rospy.loginfo(req)
-        response = AddTaskResponse(req)
+        task = Task().load(req.task)
+        rospy.loginfo(task)
+        try:
+            self.add_task(task)
+            rospy.loginfo("new task created")
+        except:
+            task.error = "failed to create task"
+            task.success = False
+            rospy.loginfo(task.error)
+        task_json = task.jsonify()
+        response = TaskCallResponse()
+        response.task = task_json
         return response
 
     def add_task(self, task:Task):
         print('adding new task') # TODO replace with database logger
-        rospy.loginfo(task.stringify_task())
         self.task_priority_queue.add_task(task.priority, task)
 
     def getElevatorStatus(self, task):
@@ -108,10 +116,14 @@ class TaskManager:
         task = self.task_priority_queue.get_task()
         self.execute_task(task)
 
-    def execute_task(self, task):
+    def execute_task(self, task:Task):
         # TODO make most task executions asyncronous
         # TODO reduce complexity, make neater
-        self.logger.logAction(task)
+        if (task):
+            self.logger.logAction(task)
+            rospy.loginfo(task.jsonify())
+        else:
+            return
         if (task.task_type == ETask.STOP):
             # TODO
             print("implement this")
@@ -168,9 +180,6 @@ if __name__ == '__main__':
     task.device_id = 106
     taskmanager.add_task_to_queue(task)
 
-    # for testing
-    task = Task(ETask.STOP_CRANE, taskmanager.task_priority_manager.get_priority(ETask.STOP_CRANE))
-    taskmanager.add_task_to_queue(task)
 
     if (taskmanager.ros):
         while not rospy.is_shutdown():
