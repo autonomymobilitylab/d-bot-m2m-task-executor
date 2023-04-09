@@ -82,6 +82,14 @@ class TaskManager:
         request.task = task_json
         return service_proxy(request)
 
+    def get_crane_stop_client(self, task:Task):
+        task_json = task.jsonify()
+        rospy.wait_for_service('/crane_communication/stop')
+        service_proxy = rospy.ServiceProxy('/crane_communication/stop', TaskCall)
+        request = TaskCallRequest()
+        request.task = task_json
+        return service_proxy(request)
+
     def log_location(self):
         self.logger.log_location(self.location)
 
@@ -93,6 +101,7 @@ class TaskManager:
         self.execute_task(task)
 
     def execute_task(self, task):
+        # TODO make most task executions asyncronous
         self.logger.logAction(task)
         if (task.task_type == ETask.STOP):
             # TODO
@@ -106,7 +115,6 @@ class TaskManager:
         if (task.task_type == ETask.STATUS_CRANE):
             res = self.get_crane_status_client(task)
             task_res = Task().load(res.task)
-            rospy.loginfo(task_res.jsonify())
             if (task_res.error == None and task_res.success == True):
                 rospy.loginfo("Crane is Stopped")
             else:
@@ -121,7 +129,14 @@ class TaskManager:
         if (task.task_type == ETask.POSITION_CRANE):
             res = self.get_crane_position_client(task)
             task_res = Task().load(res.task)
-            rospy.loginfo(task_res.jsonify())
+            if task_res.success == False:
+                rospy.loginfo("Crane position check failed")
+        if (task.task_type == ETask.STOP_CRANE):
+            res = self.get_crane_stop_client(task)
+            task_res = Task().load(res.task)
+            if task_res.success == False:
+                rospy.loginfo("Crane stopping failed")
+                # TODO what to do after crane stop failed
         return True
 
 if __name__ == '__main__':
@@ -133,7 +148,7 @@ if __name__ == '__main__':
     taskmanager.startLoggingService()
 
     # for testing
-    task = Task(ETask.STATUS_CRANE, taskmanager.task_priority_manager.get_priority(ETask.STATUS_CRANE))
+    task = Task(ETask.STOP_CRANE, taskmanager.task_priority_manager.get_priority(ETask.STOP_CRANE))
     taskmanager.add_task_to_queue(task)
 
     if (taskmanager.ros):

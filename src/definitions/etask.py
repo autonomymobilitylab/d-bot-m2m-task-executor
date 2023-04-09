@@ -11,3 +11,4 @@ class ETask(IntEnum):
     STATUS_CRANE = 8
     CALL_ELEVATOR = 9
     POSITION_CRANE = 10
+    STOP_CRANE = 11
