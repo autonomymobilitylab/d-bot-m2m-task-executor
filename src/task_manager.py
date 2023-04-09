@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import rospy
 from std_msgs.msg import String
+from nav_msgs.msg import Odometry
+# from hdl_localization.msg import Status
 from dotenv import dotenv_values
 import json
 
@@ -27,18 +29,38 @@ class TaskManager:
         self.logger = Logger(PostgresConnector(config['DATABASE_NAME'], config['DATABASE_USER'], config['DATABASE_PASSWORD']))
         # update regulary via get_curr_location
         self.location = { "x": 0, "y": 0, "z": 0}
-        
-    def startLoggingService(self):
-        print('implement this')
 
     def start_location_logging_subscriber(self):
-        # TODO
-        print('implement this')
+        rospy.Subscriber("/odom", Odometry, self.get_curr_location)
+    
+    def get_curr_location(self, data):
+        try:
+            rospy.loginfo("I heard %s",data)
+            location = {
+                "x": data.pose.pose.position.x,
+                "y": data.pose.pose.position.y,
+                "z": data.pose.pose.position.z
+            }
+            orientation = {
+                "x": data.pose.pose.orientation.x,
+                "y": data.pose.pose.orientation.y,
+                "z": data.pose.pose.orientation.z,
+                "w": data.pose.pose.orientation.w
+            }
+            self.location = location
+        except:
+            rospy.loginfo("Failed to extract position")
         return None
     
-    def get_curr_location(self):
-        # TODO subscribe to location and save to self.location
-        return None
+    #def get_curr_status(self, data):
+    #    try:
+    #        rospy.loginfo(data.pose.position.x)
+    #    except:
+    #        rospy.loginfo("Failed to extract position")
+    #    return None
+
+    #def start_status_logging_subscriber(self):
+    #    rospy.Subscriber("/status", Status, self.get_curr_status)
 
     def startRosnode(self):
         rospy.init_node('task_manager')
@@ -179,20 +201,17 @@ if __name__ == '__main__':
         config = ConfigLoader()
         config.load(['DATABASE_NAME', 'DATABASE_USER', 'DATABASE_PASSWORD', 'TASK_ROS_RATE'])
     taskmanager = TaskManager(config, True)
-    taskmanager.startLoggingService()
+    taskmanager.start_location_logging_subscriber()
 
-    task = Task(ETask.START_WORK_AREA_PROTECTION, taskmanager.task_priority_manager.get_priority(ETask.START_WORK_AREA_PROTECTION))
-    task.device_id = 106
-    taskmanager.add_task_to_queue(task)
-
+    new_task = Task(ETask.START_WORK_AREA_PROTECTION, taskmanager.task_priority_manager.get_priority(ETask.START_WORK_AREA_PROTECTION))
+    new_task.device_id = 106
+    taskmanager.add_task_to_queue(new_task)
 
     if (taskmanager.ros):
         while not rospy.is_shutdown():
             # for testing
             # taskmanager.add_task_to_queue(task)
-            message = 'Hello, world!'
-            # rospy.loginfo(message)
-            taskmanager.hello_pub.publish(message)
+            taskmanager.hello_pub.publish("Hello World")
             taskmanager.start_task_execution()
             taskmanager.log_location()
             taskmanager.rate.sleep()
