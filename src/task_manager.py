@@ -2,10 +2,11 @@
 import rospy
 from std_msgs.msg import String
 from dotenv import dotenv_values
+import json
 
 from api.task import Task
 from d_bot_m2m_task_executor.srv import AddTask, AddTaskResponse
-from d_bot_m2m_task_executor.srv import TaskCall, TaskCallResponse
+from d_bot_m2m_task_executor.srv import TaskCall, TaskCallResponse, TaskCallRequest
 from util.priority_queue import TaskPriorityQueue
 from util.priority_manager import TaskPriorityManager
 from definitions.etask import ETask
@@ -46,35 +47,18 @@ class TaskManager:
         return rospy.Publisher('task_manager', String, queue_size=10)
 
     def startAddTaskService(self):
-        return rospy.Service('add_task', AddTask, self.addTask)
+        return rospy.Service('add_task', AddTask, self.add_task_req_handler)
 
-    def addTask(self, req):
+    def add_task_req_handler(self, req):
         print('adding new task') # TODO replace with database logger
+        rospy.loginfo(req)
         response = AddTaskResponse(req)
         return response
 
-    def do_next_task(self):
-        task = self.task_priority_queue.get_task()
-        # print('Doing task') # TODO replace with database logger
-        try:
-            rospy.loginfo(task.stringify_task())
-        #print(task.stringify_task()) # TODO replace with database logger
-        except:
-            rospy.loginfo('No task')
-
-        if (task == ETask.STATUS_ELEVATOR):
-            # TODO
-            resp = self.getElevatorStatus(task)
-            print(resp)
-        elif (task == ETask.STATUS_CRANE):
-            # TODO
-            pass
-        else:
-            # TODO implement functionality
-            print('no such task defined') # TODO replace with database logger
-            return
-        
-        print('task execution finished') # TODO replace with database logger
+    def add_task(self, task:Task):
+        print('adding new task') # TODO replace with database logger
+        rospy.loginfo(task.stringify_task())
+        self.task_priority_queue.add_task(task.priority, task)
 
     def getElevatorStatus(self, task):
         rospy.wait_for_service('/elevator_communication/status')
@@ -82,17 +66,25 @@ class TaskManager:
         request = task.task_type
         return service_proxy(request)
 
+    def get_crane_position(self, task:Task):
+        task_json = task.jsonify()
+        rospy.wait_for_service('/crane_communication/position')
+        service_proxy = rospy.ServiceProxy('/crane_communication/position', TaskCall)
+        request = TaskCallRequest()
+        request.task = task_json
+        return service_proxy(request)
+
     def log_location(self):
         self.logger.log_location(self.location)
 
-    def add_task_to_queue(self, task_id):
-        task = Task(task_id,self.task_priority_manager.get_priority(task_id))
-        self. task_priority_queue.add_task(task)
+    def add_task_to_queue(self, task: Task):
+        self.task_priority_queue.add_task(task.priority, task)
 
-    def start_task_execution(self, task):
-        task = self. task_priority_queue.get_task()
-        self. execute_task(task)
-        
+    def start_task_execution(self):
+        task = self.task_priority_queue.get_task()
+        self.execute_task(task)
+
+
     def execute_task(self, task):
         if (task.task_type == ETask.STOP):
             # TODO
@@ -112,6 +104,9 @@ class TaskManager:
         if (task.task_type == ETask.CALL_ELEVATOR):
             # TODO
             print("implement this")
+        if (task.task_type == ETask.POSITION_CRANE):
+            res = self.get_crane_position(task)
+            rospy.loginfo(res)
         return True
 
 if __name__ == '__main__':
@@ -122,12 +117,18 @@ if __name__ == '__main__':
     taskmanager = TaskManager(config, True)
     taskmanager.startLoggingService()
     # s = rospy.Service('add_task', task_manager, add_task_to_queue)
+    
+    # for testing
+    task = Task(ETask.POSITION_CRANE, taskmanager.task_priority_manager.get_priority(ETask.POSITION_CRANE))
+    taskmanager.add_task_to_queue(task)
 
     if (taskmanager.ros):
         while not rospy.is_shutdown():
+            # for testing
+            taskmanager.add_task_to_queue(task)
             message = 'Hello, world!'
-            rospy.loginfo(message)
+            # rospy.loginfo(message)
             taskmanager.hello_pub.publish(message)
-            taskmanager.do_next_task()
+            taskmanager.start_task_execution()
             taskmanager.log_location()
             taskmanager.rate.sleep()

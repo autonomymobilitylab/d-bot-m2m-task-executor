@@ -15,6 +15,7 @@ add_service_files(
    FILES
    AddTask.srv
    TaskCall.srv
+   Task.srv
 )
 
 generate_messages(

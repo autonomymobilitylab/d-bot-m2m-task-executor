@@ -5,18 +5,18 @@ class Logger:
         self.db = db
 
     def log_location(self, location):
-        query = f"INSERT INTO public.dbot_location_log VALUES(1, 'task_executor_logging', '', '{location}'::jsonb);"
+        query = f"INSERT INTO public.dbot_location_log(bot_id, info, bot_location) VALUES(1, 'task_executor_logging', '{location}'::jsonb);"
         self.db.connect()
         self.db.execute(query)
         self.db.disconnect()
         return None
 
-    def logAction(self, ID=None):
+    def logAction(self, task, ID=None):
         if (id != None):
-            # TODO Update existing action log row in db
-            # for example error or success
-            print('Implement this')
-            return None
-		# TODO insert now action log row in db
-        print('Implement this')
+            # TODO modify logged action in case of error or completion
+            print('implement action log modification')
+        self.db.connect()
+        query = f"INSERT INTO public.dbot_action_log(bot_id, info, action_id) VALUES(1, '{task.stringify_task()}', {task.task_type});"
+        self.db.execute(query)
+        self.db.disconnect()
         return None
