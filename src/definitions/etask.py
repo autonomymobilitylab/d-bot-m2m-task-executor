@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import IntEnum, Enum
  
-class ETask(Enum):
+class ETask(IntEnum):
     NAVIGATE = 1
     STOP = 2
     WAIT = 3
@@ -10,3 +10,4 @@ class ETask(Enum):
     STATUS_ELEVATOR = 7
     STATUS_CRANE = 8
     CALL_ELEVATOR = 9
+    POSITION_CRANE = 10
