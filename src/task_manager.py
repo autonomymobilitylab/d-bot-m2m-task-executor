@@ -66,10 +66,18 @@ class TaskManager:
         request = task.task_type
         return service_proxy(request)
 
-    def get_crane_position(self, task:Task):
+    def get_crane_position_client(self, task:Task):
         task_json = task.jsonify()
         rospy.wait_for_service('/crane_communication/position')
         service_proxy = rospy.ServiceProxy('/crane_communication/position', TaskCall)
+        request = TaskCallRequest()
+        request.task = task_json
+        return service_proxy(request)
+
+    def get_crane_status_client(self, task:Task):
+        task_json = task.jsonify()
+        rospy.wait_for_service('/crane_communication/status')
+        service_proxy = rospy.ServiceProxy('/crane_communication/status', TaskCall)
         request = TaskCallRequest()
         request.task = task_json
         return service_proxy(request)
@@ -84,8 +92,8 @@ class TaskManager:
         task = self.task_priority_queue.get_task()
         self.execute_task(task)
 
-
     def execute_task(self, task):
+        self.logger.logAction(task)
         if (task.task_type == ETask.STOP):
             # TODO
             print("implement this")
@@ -96,8 +104,14 @@ class TaskManager:
             # TODO
             print("implement this")
         if (task.task_type == ETask.STATUS_CRANE):
-            # TODO
-            print("implement this")
+            res = self.get_crane_status_client(task)
+            task_res = Task().load(res.task)
+            rospy.loginfo(task_res.jsonify())
+            if (task_res.error == None and task_res.success == True):
+                rospy.loginfo("Crane is Stopped")
+            else:
+                # TODO suspend current operation
+                rospy.loginfo("Crane is moving")
         if (task.task_type == ETask.NAVIGATE):
             # TODO
             print("implement this")
@@ -105,8 +119,9 @@ class TaskManager:
             # TODO
             print("implement this")
         if (task.task_type == ETask.POSITION_CRANE):
-            res = self.get_crane_position(task)
-            rospy.loginfo(res)
+            res = self.get_crane_position_client(task)
+            task_res = Task().load(res.task)
+            rospy.loginfo(task_res.jsonify())
         return True
 
 if __name__ == '__main__':
@@ -116,10 +131,9 @@ if __name__ == '__main__':
         config.load(['DATABASE_NAME', 'DATABASE_USER', 'DATABASE_PASSWORD', 'TASK_ROS_RATE'])
     taskmanager = TaskManager(config, True)
     taskmanager.startLoggingService()
-    # s = rospy.Service('add_task', task_manager, add_task_to_queue)
-    
+
     # for testing
-    task = Task(ETask.POSITION_CRANE, taskmanager.task_priority_manager.get_priority(ETask.POSITION_CRANE))
+    task = Task(ETask.STATUS_CRANE, taskmanager.task_priority_manager.get_priority(ETask.STATUS_CRANE))
     taskmanager.add_task_to_queue(task)
 
     if (taskmanager.ros):
