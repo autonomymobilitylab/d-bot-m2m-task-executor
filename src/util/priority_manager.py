@@ -14,7 +14,8 @@ class TaskPriorityManager:
 		ETask.STATUS_ELEVATOR: ETaskPriority.MEDIUM,
 		ETask.STATUS_CRANE: ETaskPriority.MEDIUM,
 		ETask.POSITION_CRANE: ETaskPriority.MEDIUM,
-		ETask.STOP_CRANE: ETaskPriority.VERY_HIGH
+		ETask.STOP_CRANE: ETaskPriority.VERY_HIGH,
+		ETask.START_WORK_AREA_PROTECTION: ETaskPriority.VERY_HIGH
 	}
 
 	def get_priority(self, task:ETask):
