@@ -33,12 +33,18 @@ class UnitTests(unittest.TestCase):
         failure_msg = "Result from string should be same as created object"
         task_type = ETask.POSITION_CRANE
         task = Task(task_type, TaskPriorityManager().get_priority(task_type))
+        task.location = {
+            "x": 1,
+            "y": 2,
+            "z": 3
+        }
         task_json = task.jsonify()
         print(task_json)
         new_task = Task().load(task_json)
         self.assertEqual(new_task.task_type, task.task_type, failure_msg)
         self.assertEqual(new_task.priority, task.priority, failure_msg)
         self.assertEqual(new_task.success, task.success, failure_msg)
+        self.assertEqual(new_task.location, task.location, failure_msg)
 
 if __name__ == '__main__':
     unittest.main()
