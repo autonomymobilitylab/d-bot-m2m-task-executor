@@ -1,5 +1,7 @@
 import heapq
 
+from api.task import Task
+
 class TaskPriorityQueue:
     def __init__(self):
         self.tasks = []
@@ -10,7 +12,7 @@ class TaskPriorityQueue:
         heapq.heappush(self.tasks, (priority, self.counter, task))
         self.counter += 1
     
-    def get_task(self):
+    def get_task(self) -> Task:
         if len(self.tasks) > 0:
             return heapq.heappop(self.tasks)[2]
         else:

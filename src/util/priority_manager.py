@@ -12,8 +12,9 @@ class TaskPriorityManager:
 		ETask.CHECK_AUTH_KONE: ETaskPriority.VERY_LOW,
 		ETask.CHECK_AUTH_NOCCELA: ETaskPriority.VERY_LOW,
 		ETask.STATUS_ELEVATOR: ETaskPriority.MEDIUM,
-		ETask.STATUS_CRANE: ETaskPriority.MEDIUM
+		ETask.STATUS_CRANE: ETaskPriority.MEDIUM,
+		ETask.POSITION_CRANE: ETaskPriority.MEDIUM
 	}
 
-	def get_priority(self, task):
+	def get_priority(self, task:ETask):
 		return self.task_priorities[task].value

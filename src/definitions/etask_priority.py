@@ -1,6 +1,6 @@
-from enum import Enum
+from enum import Enum, IntEnum
 
-class ETaskPriority(Enum):
+class ETaskPriority(IntEnum):
     VERY_HIGH = 1
     HIGH = 2
     MEDIUM = 3
