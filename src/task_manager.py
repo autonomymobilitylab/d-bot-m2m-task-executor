@@ -2,6 +2,7 @@
 import rospy
 from std_msgs.msg import String
 from dotenv import dotenv_values
+import json
 
 from api.task import Task
 from d_bot_m2m_task_executor.srv import AddTask, AddTaskResponse
@@ -46,13 +47,19 @@ class TaskManager:
         return rospy.Publisher('task_manager', String, queue_size=10)
 
     def startAddTaskService(self):
-        return rospy.Service('add_task', AddTask, self.addTask)
+        return rospy.Service('add_task', AddTask, self.add_task_req_handler)
 
-    def addTask(self, req):
+    def add_task_req_handler(self, req):
         print('adding new task') # TODO replace with database logger
+        rospy.loginfo(req)
         response = AddTaskResponse(req)
         return response
 
+    def add_task(self, task:Task):
+        print('adding new task') # TODO replace with database logger
+        rospy.loginfo(task.stringify_task())
+        self.task_priority_queue.add_task(task.priority, task)
+        
     def do_next_task(self):
         task = self.task_priority_queue.get_task()
         # print('Doing task') # TODO replace with database logger
@@ -122,6 +129,8 @@ if __name__ == '__main__':
     taskmanager = TaskManager(config, True)
     taskmanager.startLoggingService()
     # s = rospy.Service('add_task', task_manager, add_task_to_queue)
+    Task(ETask.POSITION_CRANE, taskmanager.task_priority_manager())
+    taskmanager.addTask(json.loads(Task.stringify_task()))
 
     if (taskmanager.ros):
         while not rospy.is_shutdown():
