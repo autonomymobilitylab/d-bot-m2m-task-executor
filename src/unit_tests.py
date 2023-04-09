@@ -29,6 +29,18 @@ class UnitTests(unittest.TestCase):
         self.assertEqual(res.task_type, task.task_type, "Result from get_Task should be same as added task")
         self.assertEqual(res.priority, task.priority, "Result from get_Task should be same as added task")
     
+    def test_add_task_priority(self):
+        queue = TaskPriorityQueue()
+        task_type = ETask.POSITION_CRANE
+        task = Task(task_type, TaskPriorityManager().get_priority(task_type))
+        queue.add_task(task.priority,task)
+        task_type2 = ETask.STOP_CRANE
+        task2 = Task(task_type, TaskPriorityManager().get_priority(task_type))
+        queue.add_task(task2.priority,task2)
+        res = queue.get_task()
+        self.assertEqual(res.task_type, task2.task_type, "Result from get_Task should be of highest task priority")
+        self.assertEqual(res.priority, task2.priority, "Result from get_Task should be of highest task priority")
+
     def test_load_task_from_string(self):
         failure_msg = "Result from string should be same as created object"
         task_type = ETask.POSITION_CRANE
