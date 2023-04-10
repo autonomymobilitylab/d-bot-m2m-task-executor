@@ -128,6 +128,14 @@ class TaskManager:
         request.task = task_json
         return service_proxy(request)
 
+    def get_nav_goal_client(self, task:Task):
+        task_json = task.jsonify()
+        rospy.wait_for_service('/navigation/goal')
+        service_proxy = rospy.ServiceProxy('/navigation/goal', TaskCall)
+        request = TaskCallRequest()
+        request.task = task_json
+        return service_proxy(request)
+
     def log_location(self):
         log_res = self.logger.log_location(self.location)
         if (log_res == False):
@@ -169,8 +177,8 @@ class TaskManager:
                 # TODO suspend current operation
                 rospy.loginfo("Crane is moving")
         elif (task.task_type == ETask.NAVIGATE):
-            # TODO
-            print("implement this")
+            res = self.get_nav_goal_client(task)
+            task_res = Task().load(res.task)
         elif (task.task_type == ETask.CALL_ELEVATOR):
             # TODO
             print("implement this")
@@ -193,6 +201,10 @@ class TaskManager:
                 # TODO what to do after crane stop failed
         else:
             rospy.loginfo("Task Type not initialized")
+
+        if (task_res.error != None and task_res.success == False):
+            rospy.loginfo(task_res.error)
+        rospy.loginfo(task_res.jsonify())
         return True
 
 if __name__ == '__main__':
