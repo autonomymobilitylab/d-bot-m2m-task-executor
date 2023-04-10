@@ -179,6 +179,14 @@ class TaskManager:
         elif (task.task_type == ETask.POSITION_CRANE):
             res = self.get_crane_position_client(task)
             task_res = Task().load(res.task)
+            # TODO change from hardcoded to database or enum to signal devices measurement type
+            if task_res.device_id == 1:
+                # Ilmatar crane has location in mm, and dbot odometry in meters
+                task_res.location = {
+                    "x": task_res.location["x"]/1000,
+                    "y": task_res.location["y"]/1000,
+                    "z": task_res.location["z"]/1000,
+                }
             if task_res.success == False:
                 rospy.loginfo("Crane position check failed")
             try:
