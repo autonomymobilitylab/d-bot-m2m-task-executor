@@ -14,6 +14,8 @@ from util.priority_manager import TaskPriorityManager
 from definitions.etask import ETask
 from db.logger import Logger
 from db.postgres_connector import PostgresConnector
+from db.localizationDAO import LocalizationDAO
+from localization.localizer import Localizer
 from resources.config_loader import ConfigLoader
 
 class TaskManager:
@@ -26,9 +28,11 @@ class TaskManager:
             self.rate = rospy.Rate(int(config['TASK_ROS_RATE']))
             self.hello_pub = self.startHelloworldPublisher()
             self.addTasksrv = self.startAddTaskService()
-        self.logger = Logger(PostgresConnector(config['DATABASE_NAME'], config['DATABASE_USER'], config['DATABASE_PASSWORD']))
+        db = PostgresConnector(config['DATABASE_NAME'], config['DATABASE_USER'], config['DATABASE_PASSWORD'])
+        self.logger = Logger(db)
         # update regulary via get_curr_location
         self.location = { "x": 0, "y": 0, "z": 0}
+        self.localizer = Localizer(LocalizationDAO(db))
 
     def start_location_logging_subscriber(self):
         rospy.Subscriber("/odom", Odometry, self.get_curr_location)
@@ -52,16 +56,6 @@ class TaskManager:
             rospy.loginfo("Failed to extract position")
         return None
     
-    #def get_curr_status(self, data):
-    #    try:
-    #        rospy.loginfo(data.pose.position.x)
-    #    except:
-    #        rospy.loginfo("Failed to extract position")
-    #    return None
-
-    #def start_status_logging_subscriber(self):
-    #    rospy.Subscriber("/status", Status, self.get_curr_status)
-
     def startRosnode(self):
         rospy.init_node('task_manager')
 
@@ -187,6 +181,12 @@ class TaskManager:
             task_res = Task().load(res.task)
             if task_res.success == False:
                 rospy.loginfo("Crane position check failed")
+            try:
+                task_res.location = self.localizer.localize(task_res.device_id, task_res.location)
+            except:
+                rospy.loginfo("Crane localization failed")
+                task_res.error = "Crane localization failed"
+                task_res.success = False
         elif (task.task_type == ETask.STOP_CRANE):
             res = self.get_crane_stop_client(task)
             task_res = Task().load(res.task)
@@ -199,6 +199,15 @@ class TaskManager:
             if task_res.success == False:
                 rospy.loginfo("Beacon workarea protection failed")
                 # TODO what to do after crane stop failed
+        elif (task.task_type == ETask.TAG_LOCATIONS):
+            # TODO handle multiple tags
+            # TODO fetch data from beacon_communication
+            task_res = task
+            try:
+                task_res.location = self.localizer.localize(task_res.device_id, task_res.location)
+            except:
+                task_res.success = False
+                task_res.error = "tag localization failed"
         else:
             rospy.loginfo("Task Type not initialized")
 
