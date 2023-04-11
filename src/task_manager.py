@@ -120,7 +120,6 @@ class TaskManager:
         service_proxy = rospy.ServiceProxy('/beacon_communication/protection', TaskCall)
         request = TaskCallRequest()
         request.task = task_json
-        rospy.loginfo("request")
         return service_proxy(request)
 
     def get_nav_goal_client(self, task:Task):

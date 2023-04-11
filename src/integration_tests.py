@@ -15,12 +15,12 @@ class UnitTests(unittest.TestCase):
     def test_action_logging(self):
         task_type = ETask.STOP
         task = Task(task_type, TaskPriorityManager().get_priority(task_type))
-        logger = Logger(PostgresConnector("mydatabase", "myuser", "mypassword", 'host.docker.internal'))
+        logger = Logger(PostgresConnector("mydatabase", "myuser", "mypassword"))
         success = logger.logAction(task)
         self.assertEqual(success, True, "Should be true if logging was successful")
 
     def test_location_logging(self):
-        logger = Logger(PostgresConnector("mydatabase", "myuser", "mypassword", 'host.docker.internal'))
+        logger = Logger(PostgresConnector("mydatabase", "myuser", "mypassword"))
         success = logger.log_location({"x":1, "y": 2, "z":3})
         self.assertEqual(success, True, "Should be true if logging was successful")
 
