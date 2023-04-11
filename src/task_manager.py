@@ -28,7 +28,7 @@ class TaskManager:
             self.rate = rospy.Rate(int(config['TASK_ROS_RATE']))
             self.hello_pub = self.startHelloworldPublisher()
             self.addTasksrv = self.startAddTaskService()
-        db = PostgresConnector(config['DATABASE_NAME'], config['DATABASE_USER'], config['DATABASE_PASSWORD'])
+        db = PostgresConnector(config['DATABASE_NAME'], config['DATABASE_USER'], config['DATABASE_PASSWORD'], ros=rospy)
         self.logger = Logger(db)
         # update regulary via get_curr_location
         self.location = { "x": 0, "y": 0, "z": 0}
@@ -120,6 +120,7 @@ class TaskManager:
         service_proxy = rospy.ServiceProxy('/beacon_communication/protection', TaskCall)
         request = TaskCallRequest()
         request.task = task_json
+        rospy.loginfo("request")
         return service_proxy(request)
 
     def get_nav_goal_client(self, task:Task):
