@@ -221,6 +221,11 @@ class TaskManager:
 
         if (task_res.error != None and task_res.success == False):
             rospy.loginfo(task_res.error)
+        if (task_res):
+            log_res = self.logger.log_action_update(task)
+            if (log_res == False):
+                rospy.loginfo("Logging of action update failed")
+                rospy.loginfo(task.jsonify())
         rospy.loginfo(task_res.jsonify())
         return True
 

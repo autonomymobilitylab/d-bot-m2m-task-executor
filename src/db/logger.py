@@ -19,8 +19,17 @@ class Logger:
         if (id != None):
             # TODO modify logged action in case of error or completion
             print('implement action log modification')
+        location = json.dumps(task.location)
         self.db.connect()
-        query = f"INSERT INTO public.dbot_action_log(bot_id, info, action_id) VALUES(1, '{task.jsonify()}', {task.task_type});"
+        query = f"INSERT INTO public.dbot_action_log(bot_id, info, action_id, bot_location) VALUES(1, '{task.jsonify()}', {task.task_type}, '{location}'::jsonb);"
+        result = self.db.execute(query)
+        self.db.disconnect()
+        return result
+
+    def log_action_update(self, task: Task, ID=None):
+        self.db.connect()
+        location = json.dumps(task.location)
+        query = f"Update public.dbot_action_log set info ='{task.jsonify()}', error_msg ='{task.error}', bot_location='{location}'::jsonb where action_id = {task.task_type} and log_timestamp=(SELECT MAX(log_timestamp) FROM public.dbot_action_log T2 WHERE T2.action_id = {task.task_type});"
         result = self.db.execute(query)
         self.db.disconnect()
         return result
